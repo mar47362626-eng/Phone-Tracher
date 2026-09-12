@@ -110,6 +110,10 @@ const restoreSharing = async () => {
   if (!savedPersonId) return;
   try {
     const response = await fetch(apiUrl(`/api/connection/${savedPersonId}`), { cache: 'no-store' });
+    if (response.status === 404) {
+      localStorage.removeItem(sharingStorageKey);
+      return;
+    }
     if (!response.ok) throw new Error('Connection not found');
     const { person } = await response.json();
     showConnectedState(person);
