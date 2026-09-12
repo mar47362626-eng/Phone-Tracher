@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="A private, consent-first way to share your live location." />
+    <title>HereTogether - Private location sharing</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="HereTogether home"><span class="brand-mark">+</span><span>HereTogether<span class="brand-dot">.</span></span></a>
+      <span class="security-label"><span class="status-dot"></span> Consent-first sharing</span>
+    </header>
+
+    <main class="page-shell">
+      <section class="intro" aria-labelledby="page-title">
+        <span class="eyebrow"><span class="pin-icon">&#9678;</span> PRIVATE LOCATION INVITE</span>
+        <h1 id="page-title">Sam wants to stay connected with you.</h1>
+        <p>Your location stays private until you choose to share it. Register below to create a connection you can pause anytime.</p>
+      </section>
+
+      <section class="connection-card" aria-label="Location sharing connection">
+        <div class="sender-row"><span class="avatar">SR</span><span><strong>Sam Rivera</strong><small>sam@heretogether.app</small></span><span class="invite-badge">INVITE</span></div>
+
+        <div class="location-graphic" id="locationGraphic" aria-label="Illustration of two people connected by a private location link">
+          <div class="map-grid"></div><div class="route route-one"></div><div class="route route-two"></div><div class="route route-three"></div>
+          <span class="map-label map-label-one">UNION SQUARE</span><span class="map-label map-label-two">MISSION</span>
+          <div class="graphic-person sender-person"><span class="graphic-pin">+</span><strong>Sam</strong><small>Inviting you</small></div>
+          <div class="connection-line"><span></span><span></span><span></span></div>
+          <div class="graphic-person recipient-person"><span class="graphic-pin recipient-pin"><img id="recipientPhoto" alt="Registered person's profile" /><span class="pin-fallback">+</span></span><strong id="graphicName">You</strong><small id="graphicStatus">Awaiting registration</small></div>
+          <div class="graphic-caption"><span class="live-pulse"></span><span id="graphicCaption">Your location is hidden until you consent</span></div>
+        </div>
+
+        <form id="registrationForm" class="registration-form" novalidate>
+          <div class="form-heading"><h2>Register your connection</h2><p>Tell Sam who is joining, then choose whether to share.</p></div>
+          <div class="field-row"><label>Your name<input id="fullName" name="fullName" autocomplete="name" placeholder="e.g. Alex Morgan" required /></label><label>Email address<input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required /></label></div>
+          <label>Phone number<input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="+1 555 000 0000" required /></label>
+          <label class="photo-field">Profile picture <span class="optional">optional</span><input id="photo" name="photo" type="file" accept="image/*" /><span class="photo-picker"><span class="photo-preview" id="photoPreview">+</span><span><strong id="photoLabel">Choose a photo</strong><small>Use your camera or select an image</small></span></span></label>
+          <label class="consent-row"><input id="consent" name="consent" type="checkbox" required /><span>I agree to share my live location with Sam. I can stop sharing anytime.</span></label>
+          <p class="form-error" id="formError" role="alert"></p>
+          <button class="primary-button" type="submit">Register and share location <span>&rarr;</span></button>
+          <p class="privacy-note"><span>&#9673;</span> Shared only with your consent. You stay in control.</p>
+        </form>
+
+        <div class="connected-state" id="connectedState" hidden>
+          <span class="success-mark">&#10003;</span><span class="eyebrow">LOCATION SHARING IS ON</span><h2>You are connected with Sam.</h2><p>Sam can see updates while this sharing page stays open. A mobile app is needed for background updates.</p>
+          <div class="connected-details" aria-label="Live sharing status"><span class="connected-avatar" id="connectedAvatar">+</span><span><strong id="connectedName">Your location</strong><small>Visible to Sam while this page is open</small></span><span class="live-label">LIVE</span></div>
+          <div class="detected-location"><span class="location-icon">&#9678;</span><span><strong id="locationTitle">Detecting your location...</strong><small id="locationCoordinates">Allow location access to show your place.</small></span></div>
+          <div class="safety-controls" aria-label="Safety controls">
+            <button class="sos-button" id="sosButton" type="button">Send SOS alert</button>
+            <button class="secondary-button" id="checkInButton" type="button">Check in now</button>
+            <label class="checkin-select">Automatic check-ins<select id="checkinInterval"><option value="0">Off</option><option value="15">Every 15 minutes</option><option value="30">Every 30 minutes</option><option value="60">Every hour</option></select></label>
+            <label class="secondary-button evidence-button" for="evidenceInput">Share emergency evidence<input id="evidenceInput" type="file" accept="image/*" hidden /></label>
+          </div>
+          <p class="safety-status" id="safetyStatus" role="status"></p>
+          <button class="secondary-button" id="stopSharing" type="button">Stop sharing</button>
+        </div>
+      </section>
+      <footer><span>&copy; 2026 HereTogether</span><span>Private by default <span aria-hidden="true">&middot;</span> Built around consent</span></footer>
+    </main>
+    <script src="script.js?v=20260911-2"></script>
+  </body>
+</html>

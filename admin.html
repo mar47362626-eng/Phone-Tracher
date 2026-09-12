@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="HereTogether consented location dashboard" />
+    <title>HereTogether - Location dashboard</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="admin.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  </head>
+  <body>
+    <section id="authGate" class="auth-gate" hidden>
+      <div class="auth-card">
+        <span class="brand-mark">+</span>
+        <h1>Owner access</h1>
+        <p id="authIntro">Set up the owner account to protect your dashboard.</p>
+        <form id="authForm">
+          <label id="authEmailLabel">Owner email<input id="authEmail" type="email" autocomplete="email" required /></label>
+          <label>Password<input id="authPassword" type="password" autocomplete="current-password" minlength="8" required /></label>
+          <label id="authPinLabel" hidden>PIN<input id="authPin" type="password" inputmode="numeric" pattern="[0-9]{4,8}" minlength="4" maxlength="8" /></label>
+          <p id="authError" class="auth-error" role="alert"></p>
+          <button type="submit" id="authSubmit">Set up owner account</button>
+        </form>
+        <button type="button" id="authMode" class="auth-mode" hidden>Use PIN instead</button>
+      </div>
+    </section>
+    <div class="admin-shell">
+      <aside class="sidebar">
+        <a class="brand" href="index.html"><span class="brand-mark">+</span><span>HereTogether<span class="brand-dot">.</span></span></a>
+        <div class="workspace"><span class="workspace-avatar">S</span><span><strong>Sam's workspace</strong><small>Personal</small></span><span class="chevron">⌄</span></div>
+        <nav aria-label="Dashboard navigation">
+          <a class="nav-link active" href="#overview"><span>◉</span> Overview</a>
+          <a class="nav-link" href="#people"><span>◎</span> People</a>
+          <a class="nav-link" href="index.html"><span>↗</span> Public invite</a>
+        </nav>
+        <div class="sidebar-bottom"><div class="privacy-card"><span>◌</span><span><strong>Consent is visible</strong><small>Every person can pause sharing at any time.</small></span></div><div class="admin-user"><span class="avatar avatar-purple">SR</span><span><strong>Sam Rivera</strong><small>sam@heretogether.app</small></span></div></div>
+      </aside>
+
+      <main class="main-content" id="overview">
+        <header class="topbar"><div><span class="crumb">Workspace /</span><strong>Location dashboard</strong></div><div class="top-actions"><span class="system-status"><i></i> All systems operational</span><span class="avatar avatar-purple">SR</span></div></header>
+        <section class="content">
+          <div class="heading-row"><div><p class="eyebrow">FRIDAY, SEPTEMBER 11, 2026</p><h1>People sharing with you</h1><p class="intro">Only people who have registered and granted permission appear here.</p></div><button class="refresh-button" id="refreshButton">↻ <span>Refresh locations</span></button></div>
+          <div class="demo-notice"><span>i</span><span><strong>Consent-based dashboard</strong> Only people who register and grant location permission appear here. Locations refresh automatically.</span></div>
+          <form class="location-lookup" id="locationLookup"><div><strong>Find a person</strong><small>Search active consented connections by email or phone.</small></div><label>Email<input id="lookupEmail" type="email" autocomplete="off" placeholder="person@example.com" /></label><label>Phone<input id="lookupPhone" type="tel" autocomplete="off" placeholder="+1 555 000 0000" /></label><button type="submit">Find location</button><button type="button" class="lookup-clear" id="lookupClear">Clear</button><p id="lookupMessage" role="status"></p></form>
+          <div class="stats"><div class="stat"><span class="stat-icon green">◉</span><span><small>Sharing now</small><strong id="activeCount">1</strong></span></div><div class="stat"><span class="stat-icon coral">⌖</span><span><small>Last update</small><strong id="lastUpdate">Just now</strong></span></div><div class="stat"><span class="stat-icon yellow">✓</span><span><small>Distance traveled</small><strong id="distanceTraveled">0 m</strong></span></div></div>
+          <div class="dashboard-grid">
+            <section class="panel map-panel"><div class="panel-heading"><span><h2>Shared locations</h2><p>Current places from consented connections</p></span><span class="live-badge"><i></i> Live view</span></div><div class="admin-map"><div id="locationMap" class="location-map" aria-label="Map showing all people sharing their locations"></div><div class="map-legend"><span><i class="legend-dot"></i> Sharing live</span><span><i class="legend-line"></i> Private connection</span></div></div></section>
+            <section class="panel people-panel" id="people"><div class="panel-heading"><span><h2>People</h2><p>Registered connections</p></span><span class="people-count">1 person</span></div><div class="person-card"><span class="person-photo" id="personPhoto">AM</span><span class="person-info"><strong id="personName">Alex Morgan</strong><small>alex@example.com</small><small>+1 555 000 0000</small><small id="personLocation">Location not detected yet</small></span><span class="person-status"><i></i> Sharing live</span><button class="person-menu" aria-label="Person options">•••</button></div><div class="consent-detail"><span>✓</span><span><strong>Permission granted</strong><small>Location sharing began today. Alex can stop sharing at any time.</small></span></div><div class="journey-summary" id="journeySummary">No movement history recorded yet.</div><div id="peopleLocations" class="people-locations" aria-label="Registered people and their shared locations"></div></section>
+          </div>
+          <section class="panel activity-panel"><div class="panel-heading"><span><h2>Recent activity</h2><p>A clear record of consented sharing</p></span></div><div class="activity-row"><span class="activity-icon green">✓</span><span><strong>Alex Morgan started sharing</strong><small>Location permission granted for Sam Rivera</small></span><time id="activityTime">Just now</time></div></section>
+          <section class="panel safety-panel"><div class="panel-heading"><span><h2>Safety activity</h2><p>SOS alerts, check-ins, and shared evidence</p></span><span class="safety-count" id="safetyCount">No alerts</span></div><div class="geofence-control"><span id="geofenceStatus">No safety zone set</span><label for="geofenceRadius" class="sr-only">Safety zone radius</label><select id="geofenceRadius" title="Safety zone radius"><option value="250">250 m zone</option><option value="500">500 m zone</option><option value="1000">1 km zone</option></select><button id="setGeofence">Set zone</button></div><button id="enableEmergencySound" class="sound-button" type="button">Enable emergency sound</button><div id="emergencyBanner" class="emergency-banner" role="alert" hidden></div><div id="safetyActivity" class="safety-activity"><p>No safety activity yet.</p></div></section>
+          <footer><span>© 2026 HereTogether</span><span>Private by default · Built around consent</span><span>Privacy · Terms</span></footer>
+        </section>
+      </main>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="admin.js?v=20260911-15"></script>
+  </body>
+</html>
