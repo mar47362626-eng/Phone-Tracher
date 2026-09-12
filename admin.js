@@ -52,6 +52,15 @@ let loginWithPin = false;
 let lookupQuery = '';
 
 async function initializeAuth() {
+  if (window.location.hostname.endsWith('.github.io')) {
+    authGate.hidden = false;
+    document.querySelector('.admin-shell').hidden = true;
+    authIntro.textContent = 'The admin dashboard needs the Node server to access private location data.';
+    authError.textContent = 'Run `node server.js` locally, then open http://localhost:5173/admin.html.';
+    authForm.hidden = true;
+    authMode.hidden = true;
+    return false;
+  }
   const response = await fetch('/api/auth/status', { cache: 'no-store' });
   const status = await response.json();
   if (status.authenticated) return true;
