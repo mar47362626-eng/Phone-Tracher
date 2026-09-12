@@ -23,6 +23,8 @@ let checkinTimer = null;
 let latestPlaceRequest = 0;
 let sharingPersonId = null;
 const sharingStorageKey = 'heretogether-sharing-person';
+const apiBase = 'https://phone-tracher.onrender.com';
+const apiUrl = (path) => `${apiBase}${path}`;
 
 const readSelectedPhoto = () => new Promise((resolve) => {
   const [file] = photoInput.files;
@@ -51,7 +53,7 @@ photoInput.addEventListener('change', () => {
 const updateLocation = (position) => {
   const { latitude, longitude, accuracy } = position.coords;
   if (sharingPersonId) {
-    fetch(`/api/location/${sharingPersonId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ latitude, longitude, accuracy }) }).catch(() => {});
+    fetch(apiUrl(`/api/location/${sharingPersonId}`), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ latitude, longitude, accuracy }) }).catch(() => {});
   }
   locationTitle.textContent = 'Location detected';
   locationCoordinates.textContent = `${latitude.toFixed(5)}, ${longitude.toFixed(5)} · within ${Math.round(accuracy)} m`;
@@ -107,7 +109,7 @@ const restoreSharing = async () => {
   const savedPersonId = localStorage.getItem(sharingStorageKey);
   if (!savedPersonId) return;
   try {
-    const response = await fetch(`/api/connection/${savedPersonId}`, { cache: 'no-store' });
+    const response = await fetch(apiUrl(`/api/connection/${savedPersonId}`), { cache: 'no-store' });
     if (!response.ok) throw new Error('Connection not found');
     const { person } = await response.json();
     showConnectedState(person);
@@ -118,7 +120,7 @@ const restoreSharing = async () => {
 
 const postSafetyEvent = async (type, body = {}) => {
   if (!sharingPersonId) throw new Error('No active sharing connection');
-  const response = await fetch(`/api/${type}/${sharingPersonId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const response = await fetch(apiUrl(`/api/${type}/${sharingPersonId}`), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
     throw new Error(error.error || 'Safety event failed');
@@ -172,7 +174,7 @@ form.addEventListener('submit', async (event) => {
   const photoData = await readSelectedPhoto();
   let registration;
   try {
-    registration = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: fullName.value.trim(), email, phone: document.querySelector('#phone').value.trim(), consent: true, photo: photoData }) });
+    registration = await fetch(apiUrl('/api/register'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: fullName.value.trim(), email, phone: document.querySelector('#phone').value.trim(), consent: true, photo: photoData }) });
   } catch {
     formError.textContent = 'The server is unavailable. Please start it with node server.js and try again.';
     return;
@@ -190,7 +192,7 @@ stopSharing.addEventListener('click', () => {
   if (checkinTimer) window.clearInterval(checkinTimer);
   locationWatchId = null;
   checkinTimer = null;
-  if (sharingPersonId) fetch(`/api/stop/${sharingPersonId}`, { method: 'POST' }).catch(() => {});
+  if (sharingPersonId) fetch(apiUrl(`/api/stop/${sharingPersonId}`), { method: 'POST' }).catch(() => {});
   localStorage.removeItem(sharingStorageKey);
   sharingPersonId = null;
   connectedState.hidden = true;

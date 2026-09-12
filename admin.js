@@ -50,18 +50,11 @@ geofenceRadius.setAttribute('aria-label', 'Safety zone radius');
 let placeRequestId = 0;
 let loginWithPin = false;
 let lookupQuery = '';
+const apiBase = 'https://phone-tracher.onrender.com';
+const apiUrl = (path) => `${apiBase}${path}`;
 
 async function initializeAuth() {
-  if (window.location.hostname.endsWith('.github.io')) {
-    authGate.hidden = false;
-    document.querySelector('.admin-shell').hidden = true;
-    authIntro.textContent = 'The admin dashboard needs the Node server to access private location data.';
-    authError.textContent = 'Run `node server.js` locally, then open http://localhost:5173/admin.html.';
-    authForm.hidden = true;
-    authMode.hidden = true;
-    return false;
-  }
-  const response = await fetch('/api/auth/status', { cache: 'no-store' });
+  const response = await fetch(apiUrl('/api/auth/status'), { cache: 'no-store', credentials: 'include' });
   const status = await response.json();
   if (status.authenticated) return true;
   authGate.hidden = false;
@@ -92,7 +85,7 @@ authForm.addEventListener('submit', async (event) => {
   authError.textContent = '';
   const setup = authSubmit.textContent === 'Set up owner account';
   const payload = setup ? { email: authEmail.value, password: authPassword.value, pin: authPin.value } : loginWithPin ? { pin: authPin.value } : { password: authPassword.value };
-  const response = await fetch(setup ? '/api/auth/setup' : '/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  const response = await fetch(apiUrl(setup ? '/api/auth/setup' : '/api/auth/login'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) });
   if (!response.ok) {
     authError.textContent = (await response.json().catch(() => ({}))).error || 'Authentication failed.';
     return;
@@ -257,7 +250,7 @@ function applyPeople(people) {
 
 async function refreshPeople() {
   try {
-    const response = await fetch(`/api/people${lookupQuery}`, { cache: 'no-store' });
+    const response = await fetch(apiUrl(`/api/people${lookupQuery}`), { cache: 'no-store', credentials: 'include' });
     if (!response.ok) throw new Error('Unable to load locations');
     const { people } = await response.json();
     if (lookupQuery) lookupMessage.textContent = people.length ? `${people.length} matching connection found.` : 'No active consented connection found.';
@@ -327,7 +320,7 @@ if (localStorage.getItem(emergencySoundKey) === 'true') enableEmergencySound.tex
 
 setGeofence.addEventListener('click', async () => {
   if (!activePersonId) return;
-  const response = await fetch(`/api/geofence/${activePersonId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ radius: Number(geofenceRadius.value) }) });
+  const response = await fetch(apiUrl(`/api/geofence/${activePersonId}`), { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ radius: Number(geofenceRadius.value) }) });
   geofenceStatus.textContent = response.ok ? `Safety zone: ${geofenceRadius.value} m` : 'Set the zone after a location is available';
   refreshPeople();
 });

@@ -19,7 +19,7 @@ function writeData(data) {
 }
 
 function sendJson(response, status, body) {
-  response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+  response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': 'https://mar47362626-eng.github.io', 'Access-Control-Allow-Credentials': 'true' });
   response.end(JSON.stringify(body));
 }
 
@@ -115,14 +115,14 @@ async function handleApi(request, response, url) {
     if (!crypto.timingSafeEqual(Buffer.from(candidate), Buffer.from(stored.hash))) return sendJson(response, 401, { error: 'Incorrect owner credentials.' });
     const token = crypto.randomBytes(32).toString('hex');
     sessions.set(token, { email: owner.email, createdAt: Date.now() });
-    response.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Set-Cookie': `ht_session=${token}; HttpOnly; SameSite=Strict; Path=/`, 'Cache-Control': 'no-store' });
+    response.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Set-Cookie': `ht_session=${token}; HttpOnly; SameSite=None; Secure; Path=/`, 'Cache-Control': 'no-store' });
     return response.end(JSON.stringify({ ok: true }));
   }
 
   if (request.method === 'POST' && url.pathname === '/api/auth/logout') {
     const token = String(request.headers.cookie || '').split(';').map((item) => item.trim()).find((item) => item.startsWith('ht_session='))?.split('=')[1];
     if (token) sessions.delete(token);
-    response.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Set-Cookie': 'ht_session=; Max-Age=0; HttpOnly; SameSite=Strict; Path=/' });
+    response.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Set-Cookie': 'ht_session=; Max-Age=0; HttpOnly; SameSite=None; Secure; Path=/' });
     return response.end(JSON.stringify({ ok: true }));
   }
 
@@ -238,6 +238,13 @@ function serveFile(request, response, url) {
 
 const server = http.createServer(async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
+  response.setHeader('Access-Control-Allow-Origin', 'https://mar47362626-eng.github.io');
+  response.setHeader('Access-Control-Allow-Credentials', 'true');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (request.method === 'OPTIONS') {
+    response.writeHead(204);
+    return response.end();
+  }
   if (url.pathname.startsWith('/api/')) return handleApi(request, response, url).catch(() => sendJson(response, 500, { error: 'Server error.' }));
   serveFile(request, response, url);
 });
