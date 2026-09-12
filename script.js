@@ -53,7 +53,14 @@ photoInput.addEventListener('change', () => {
 const updateLocation = (position) => {
   const { latitude, longitude, accuracy } = position.coords;
   if (sharingPersonId) {
-    fetch(apiUrl(`/api/location/${sharingPersonId}`), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ latitude, longitude, accuracy }) }).catch(() => {});
+    fetch(apiUrl(`/api/location/${sharingPersonId}`), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ latitude, longitude, accuracy }) })
+      .then((response) => {
+        if (response.status !== 404) return;
+        if (locationWatchId !== null) navigator.geolocation.clearWatch(locationWatchId);
+        localStorage.removeItem(sharingStorageKey);
+        window.location.reload();
+      })
+      .catch(() => {});
   }
   locationTitle.textContent = 'Location detected';
   locationCoordinates.textContent = `${latitude.toFixed(5)}, ${longitude.toFixed(5)} · within ${Math.round(accuracy)} m`;

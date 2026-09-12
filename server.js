@@ -61,9 +61,28 @@ function hashSecret(secret, salt = crypto.randomBytes(16).toString('hex')) {
   return { salt, hash: crypto.scryptSync(secret, salt, 64).toString('hex') };
 }
 
+function sessionToken(owner) {
+  const payload = Buffer.from(JSON.stringify({ email: owner.email, createdAt: Date.now() })).toString('base64url');
+  const signature = crypto.createHmac('sha256', owner.password.hash).update(payload).digest('base64url');
+  return `${payload}.${signature}`;
+}
+
 function getSession(request) {
   const token = String(request.headers.cookie || '').split(';').map((item) => item.trim()).find((item) => item.startsWith('ht_session='))?.split('=')[1];
-  return token && sessions.has(token) ? sessions.get(token) : null;
+  if (!token) return null;
+  if (sessions.has(token)) return sessions.get(token);
+  const [payload, signature] = token.split('.');
+  const owner = readData().owner;
+  if (!payload || !signature || !owner) return null;
+  const expected = crypto.createHmac('sha256', owner.password.hash).update(payload).digest('base64url');
+  if (signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
+  try {
+    const session = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    if (session.email !== owner.email || Date.now() - session.createdAt > 30 * 24 * 60 * 60 * 1000) return null;
+    return session;
+  } catch {
+    return null;
+  }
 }
 
 function requireOwner(request, response) {
@@ -147,9 +166,8 @@ async function handleApi(request, response, url) {
     const stored = body.pin ? owner.pin : owner.password;
     const candidate = crypto.scryptSync(secret, stored.salt, 64).toString('hex');
     if (!crypto.timingSafeEqual(Buffer.from(candidate), Buffer.from(stored.hash))) return sendJson(response, 401, { error: 'Incorrect owner credentials.' });
-    const token = crypto.randomBytes(32).toString('hex');
-    sessions.set(token, { email: owner.email, createdAt: Date.now() });
-    response.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Set-Cookie': `ht_session=${token}; HttpOnly; SameSite=None; Secure; Path=/`, 'Cache-Control': 'no-store' });
+    const token = sessionToken(owner);
+    response.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Set-Cookie': `ht_session=${token}; Max-Age=2592000; HttpOnly; SameSite=None; Secure; Path=/`, 'Cache-Control': 'no-store' });
     return response.end(JSON.stringify({ ok: true }));
   }
 
