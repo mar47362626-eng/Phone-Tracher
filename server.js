@@ -7,15 +7,49 @@ const root = __dirname;
 const dataPath = path.join(root, 'data.json');
 const port = process.env.PORT || 5173;
 const host = process.env.HOST || '0.0.0.0';
+const supabaseUrl = process.env.SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const mimeTypes = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml' };
 const sessions = new Map();
+let appData;
 
 function readData() {
+  if (appData) return appData;
   try { return JSON.parse(fs.readFileSync(dataPath, 'utf8')); } catch { return { people: [] }; }
 }
 
 function writeData(data) {
+  appData = data;
   fs.writeFileSync(dataPath, `${JSON.stringify(data, null, 2)}\n`);
+  saveRemoteData(data).catch((error) => console.error(`Supabase save failed: ${error.message}`));
+}
+
+function supabaseHeaders() {
+  return { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}`, 'Content-Type': 'application/json' };
+}
+
+async function loadRemoteData() {
+  appData = readData();
+  if (!supabaseUrl || !supabaseServiceKey) return;
+  const response = await fetch(`${supabaseUrl}/rest/v1/app_state?id=eq.1&select=state`, { headers: supabaseHeaders() });
+  if (!response.ok) throw new Error(`read returned ${response.status}`);
+  const rows = await response.json();
+  if (rows[0]?.state) {
+    appData = rows[0].state;
+    fs.writeFileSync(dataPath, `${JSON.stringify(appData, null, 2)}\n`);
+  } else {
+    await saveRemoteData(appData);
+  }
+}
+
+async function saveRemoteData(data) {
+  if (!supabaseUrl || !supabaseServiceKey) return;
+  const response = await fetch(`${supabaseUrl}/rest/v1/app_state`, {
+    method: 'POST',
+    headers: { ...supabaseHeaders(), Prefer: 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify({ id: 1, state: data, updated_at: new Date().toISOString() })
+  });
+  if (!response.ok) throw new Error(`write returned ${response.status}`);
 }
 
 function sendJson(response, status, body) {
@@ -249,4 +283,9 @@ const server = http.createServer(async (request, response) => {
   serveFile(request, response, url);
 });
 
-server.listen(port, host, () => console.log(`HereTogether server running on port ${port}`));
+loadRemoteData()
+  .then(() => server.listen(port, host, () => console.log(`HereTogether server running on port ${port}`)))
+  .catch((error) => {
+    console.error(`Supabase startup failed: ${error.message}`);
+    process.exit(1);
+  });
