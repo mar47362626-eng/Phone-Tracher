@@ -286,6 +286,6 @@ const server = http.createServer(async (request, response) => {
 loadRemoteData()
   .then(() => server.listen(port, host, () => console.log(`HereTogether server running on port ${port}`)))
   .catch((error) => {
-    console.error(`Supabase startup failed: ${error.message}`);
-    process.exit(1);
+    console.error(`Supabase startup failed: ${error.message}. Continuing with local storage.`);
+    server.listen(port, host, () => console.log(`HereTogether server running on port ${port}`));
   });
